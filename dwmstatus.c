@@ -132,6 +132,7 @@ char * getbrightness() {
 char * getbattery(char *base) {
 	char *co, status;
 	int descap, remcap;
+  float charge;
 
 	descap = -1;
 	remcap = -1;
@@ -145,9 +146,9 @@ char * getbattery(char *base) {
 	}
 	free(co);
 
-	co = readfile(base, "charge_full_design");
+	co = readfile(base, "charge_full");
 	if (co == NULL) {
-		co = readfile(base, "energy_full_design");
+		co = readfile(base, "energy_full");
 		if (co == NULL)
 			return smprintf("");
 	}
@@ -168,14 +169,24 @@ char * getbattery(char *base) {
 		status = '-';
 	} else if(!strncmp(co, "Charging", 8)) {
 		status = '+';
+  } else if (!strncmp(co, "Full", 4)) {
+    status = '!';
 	} else {
 		status = '?';
 	}
 
-	if (remcap < 0 || descap < 0)
-		return smprintf("invalid");
+  free(co);
 
-	return smprintf("%.0f%%%c", ((float)remcap / (float)descap) * 100, status);
+  if (remcap < 0 || descap < 0)
+    return smprintf("invalid");
+
+  charge = ((float)remcap / (float)descap) * 100;
+
+  if (charge > 100 || status == '!') {
+    charge = 100;
+  }
+
+	return smprintf("%.0f%%%c", charge, status);
 }
 
 int main(void) {
