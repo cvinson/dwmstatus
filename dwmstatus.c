@@ -102,6 +102,31 @@ char * readfile(char *base, char *file) {
 	return smprintf("%s", line);
 }
 
+char * getvolume() {
+  int MAX_LENGTH = 5;
+  FILE *volume_file;
+  FILE *mute_file;
+  char volume[MAX_LENGTH];
+  char mute[MAX_LENGTH];
+
+  volume_file = popen("/usr/bin/pactl get-sink-volume 0 | /usr/bin/sed -n 's/.*\\b\\([0-9]\\+\\%\\) .*/\\1/p'", "r");
+  mute_file = popen("/usr/bin/pactl get-sink-mute 0 | /usr/bin/sed -n 's/Mute: \\(\\w*\\)/\\1/p'", "r");
+
+  fgets(volume, MAX_LENGTH, volume_file);
+  volume[strcspn(volume, "\n")] = 0;
+
+  fgets(mute, MAX_LENGTH, mute_file);
+
+  pclose(volume_file);
+  pclose(mute_file);
+
+  if (strcmp(mute, "yes") > 0) {
+    return "X";
+  }
+
+  return smprintf("%s", volume);
+}
+
 char * getbrightness() {
   int MAX_LENGTH = 10;
   float percentage;
@@ -121,7 +146,6 @@ char * getbrightness() {
   fgets(max, MAX_LENGTH, max_file);
 
   percentage = ((float)atoi(brightness) / atoi(max)) * 100; 
-
 
   pclose(brightness_file);
   pclose(max_file);
@@ -194,18 +218,20 @@ int main(void) {
 	char *bat;
   char *bri;
 	char *tchi;
+  char *vol;
 
 	if (!(dpy = XOpenDisplay(NULL))) {
 		fprintf(stderr, "dwmstatus: cannot open display.\n");
 		return 1;
 	}
 
-	for (;;sleep(10)) {
+	for (;;sleep(1)) {
 		bat = getbattery("/sys/class/power_supply/BAT0");
     bri = getbrightness();
 		tchi = mktimes("%a %d %b %H:%M", tzchicago);
+    vol = getvolume();
 
-		status = smprintf("☼%s ▒%s %s", bri, bat, tchi);
+		status = smprintf("♪%s ☼%s ╬%s %s", vol, bri, bat, tchi);
 		setstatus(status);
 
 		free(bat);
