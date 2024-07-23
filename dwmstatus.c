@@ -228,10 +228,10 @@ int main(void) {
 	for (;;sleep(1)) {
 		bat = getbattery("/sys/class/power_supply/BAT0");
     bri = getbrightness();
-		tchi = mktimes("%a %d %b %H:%M", tzchicago);
+		tchi = mktimes("%a %d %b %I:%M", tzchicago);
     vol = getvolume();
 
-		status = smprintf("♪%s ☼%s ╬%s %s", vol, bri, bat, tchi);
+		status = smprintf("Vol:%s Bri:%s Bat:%s %s", vol, bri, bat, tchi);
 		setstatus(status);
 
 		free(bat);
